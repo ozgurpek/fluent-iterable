@@ -148,7 +148,7 @@ async function* repeat<T>(iterable: AsyncIterable<T>, n: number): AsyncIterable<
 
 async function* flatten<T, R>(
   iterable: AsyncIterable<T>,
-  mapper: Mapper<T, Iterable<R>> = t => (t as unknown) as Iterable<R>
+  mapper: Mapper<T, Iterable<R>> = t => t as unknown as Iterable<R>
 ): AsyncIterable<R> {
   for await (const t of iterable) {
     yield* mapper(t);
@@ -391,8 +391,9 @@ async function toObject<T, R>(
   keySelector: Mapper<T, string>,
   valueSelector: Mapper<T, unknown> = identity
 ): Promise<R> {
-  const res = {};
+  const res: object = {};
   for await (const t of iterable) {
+    // @ts-expect-error implicit any
     res[keySelector(t)] = valueSelector(t);
   }
 
@@ -404,8 +405,9 @@ async function toObjectAsync<T, R>(
   keySelector: AsyncMapper<T, string>,
   valueSelector: AsyncMapper<T, unknown>
 ): Promise<R> {
-  const res = {};
+  const res: object = {};
   for await (const t of iterable) {
+    // @ts-expect-error implicit any
     res[await keySelector(t)] = await valueSelector(t);
   }
 

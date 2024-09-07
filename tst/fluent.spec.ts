@@ -1,5 +1,6 @@
 import fluent from '../src';
-import expect, { flatMap, pick } from './tools';
+import { expect } from '@jest/globals';
+import { pick, flatMap } from './tools';
 
 enum Gender {
   Male = 'Male',
@@ -88,160 +89,110 @@ describe('fluent iterable', () => {
     beforeEach(() => (subject = createSubject()));
 
     describe('synchronous', () => {
-      context('basics work', () => {
+      describe('basics work', () => {
         it('wrapping does not fail', () => {
           fluent(subject);
         });
         it('can iterate through', () => {
           let idx = 0;
           for (const person of fluent(subject)) {
-            expect(person).to.equal(data[idx++]);
+            expect(person).toBe(data[idx++]);
           }
         });
         it('can convert to array', () => {
-          expect(fluent(subject).toArray()).to.eql(data);
+          expect(fluent(subject).toArray()).toEqual(data);
         });
       });
-      context('takeWhile', () => {
+      describe('takeWhile', () => {
         it('works with initially not true statement', () =>
           expect(
             fluent(subject)
               .takeWhile(p => p.emails.length > 0)
               .toArray()
-          ).to.be.empty);
+          ).toHaveLength(0));
         it('works with eventually not true statement', () => {
           expect(
             fluent(subject)
               .takeWhile(p => p.gender === undefined)
               .toArray()
-          ).to.eql(data.slice(0, 3));
+          ).toEqual(data.slice(0, 3));
         });
         it('works with always true statement', () => {
           expect(
             fluent(subject)
               .takeWhile(p => p.name.length > 0)
               .toArray()
-          ).to.eql(data);
+          ).toEqual(data);
         });
       });
-      context('take', () => {
-        it('works with negative count', () =>
-          expect(
-            fluent(subject)
-              .take(-5)
-              .toArray()
-          ).to.be.empty);
-        it('works with zero count', () =>
-          expect(
-            fluent(subject)
-              .take(0)
-              .toArray()
-          ).to.be.empty);
-        it('works with one count', () =>
-          expect(
-            fluent(subject)
-              .take(1)
-              .toArray()
-          ).to.eql(data.slice(0, 1)));
-        it('works with count < length', () =>
-          expect(
-            fluent(subject)
-              .take(5)
-              .toArray()
-          ).to.eql(data.slice(0, 5)));
-        it('works with count = length', () =>
-          expect(
-            fluent(subject)
-              .take(data.length)
-              .toArray()
-          ).to.eql(data));
+      describe('take', () => {
+        it('works with negative count', () => expect(fluent(subject).take(-5).toArray()).toHaveLength(0));
+        it('works with zero count', () => expect(fluent(subject).take(0).toArray()).toHaveLength(0));
+        it('works with one count', () => expect(fluent(subject).take(1).toArray()).toEqual(data.slice(0, 1)));
+        it('works with count < length', () => expect(fluent(subject).take(5).toArray()).toEqual(data.slice(0, 5)));
+        it('works with count = length', () => expect(fluent(subject).take(data.length).toArray()).toEqual(data));
         it('works with count > length', () =>
           expect(
             fluent(subject)
               .take(data.length * 2)
               .toArray()
-          ).to.eql(data));
+          ).toEqual(data));
       });
-      context('skipWhile', () => {
+      describe('skipWhile', () => {
         it('works with initially not true statement', () =>
           expect(
             fluent(subject)
               .skipWhile(p => p.emails.length > 0)
               .toArray()
-          ).to.eql(data));
+          ).toEqual(data));
         it('works with eventually not true statement', () =>
           expect(
             fluent(subject)
               .skipWhile(p => p.gender === undefined)
               .toArray()
-          ).to.eql(data.slice(3)));
+          ).toEqual(data.slice(3)));
         it('works with always true statement', () =>
           expect(
             fluent(subject)
               .skipWhile(p => p.name.length > 0)
               .toArray()
-          ).to.be.empty);
+          ).toHaveLength(0));
         it('works with alternating true statement', () =>
           expect(
             fluent(subject)
               .skipWhile(p => p.emails.length === 0)
               .toArray()
-          ).to.eql(data.slice(1)));
+          ).toEqual(data.slice(1)));
       });
-      context('skip', () => {
-        it('works with negative count', () =>
-          expect(
-            fluent(subject)
-              .skip(-5)
-              .toArray()
-          ).to.eql(data));
-        it('works with zero count', () =>
-          expect(
-            fluent(subject)
-              .skip(0)
-              .toArray()
-          ).to.eql(data));
-        it('works with one count', () =>
-          expect(
-            fluent(subject)
-              .skip(1)
-              .toArray()
-          ).to.eql(data.slice(1)));
-        it('works with count < length', () =>
-          expect(
-            fluent(subject)
-              .skip(5)
-              .toArray()
-          ).to.eql(data.slice(5)));
-        it('works with count = length', () =>
-          expect(
-            fluent(subject)
-              .skip(data.length)
-              .toArray()
-          ).to.be.empty);
+      describe('skip', () => {
+        it('works with negative count', () => expect(fluent(subject).skip(-5).toArray()).toEqual(data));
+        it('works with zero count', () => expect(fluent(subject).skip(0).toArray()).toEqual(data));
+        it('works with one count', () => expect(fluent(subject).skip(1).toArray()).toEqual(data.slice(1)));
+        it('works with count < length', () => expect(fluent(subject).skip(5).toArray()).toEqual(data.slice(5)));
+        it('works with count = length', () => expect(fluent(subject).skip(data.length).toArray()).toHaveLength(0));
         it('works with count > length', () =>
           expect(
             fluent(subject)
               .skip(data.length * 2)
               .toArray()
-          ).to.be.empty);
+          ).toHaveLength(0));
       });
       describe('map', () => {
         it('maps to undefined', () => {
           const res = fluent(subject)
             .map(() => undefined)
             .toArray();
-          expect(res).to.length(data.length);
-          res.forEach(item => expect(item).to.be.undefined);
+          expect(res).toHaveLength(data.length);
+          res.forEach(item => expect(item).toBeUndefined());
         });
         it('maps to projection', () => {
           const res = fluent(subject)
             .map(p => p.name)
             .toArray();
-          expect(res).to.length(data.length);
+          expect(res).toHaveLength(data.length);
           let idx = 0;
           for (const item of res) {
-            expect(item).to.equal(data[idx++].name);
+            expect(item).toBe(data[idx++].name);
           }
         });
       });
@@ -251,19 +202,19 @@ describe('fluent iterable', () => {
             fluent(subject)
               .filter(() => false)
               .toArray()
-          ).to.be.empty);
+          ).toHaveLength(0));
         it('with always true predicate', () =>
           expect(
             fluent(subject)
               .filter(() => true)
               .toArray()
-          ).to.eql(data));
+          ).toEqual(data));
         it('with alternating predicate', () =>
           expect(
             fluent(subject)
               .filter(p => p.gender === Gender.Female)
               .toArray()
-          ).to.eql(picker(4, 7, 10)));
+          ).toEqual(picker(4, 7, 10)));
       });
       describe('append', () => {
         it('with empty iterable', () =>
@@ -271,13 +222,9 @@ describe('fluent iterable', () => {
             fluent([] as Person[])
               .append(additionalPerson)
               .toArray()
-          ).to.eql([additionalPerson]));
+          ).toEqual([additionalPerson]));
         it('with non-empty iterable', () =>
-          expect(
-            fluent(subject)
-              .append(additionalPerson)
-              .toArray()
-          ).to.eql([...data, additionalPerson]));
+          expect(fluent(subject).append(additionalPerson).toArray()).toEqual([...data, additionalPerson]));
       });
       describe('prepend', () => {
         it('with empty iterable', () =>
@@ -285,149 +232,67 @@ describe('fluent iterable', () => {
             fluent([] as Person[])
               .prepend(additionalPerson)
               .toArray()
-          ).to.eql([additionalPerson]));
+          ).toEqual([additionalPerson]));
         it('with non-empty iterable', () =>
-          expect(
-            fluent(subject)
-              .prepend(additionalPerson)
-              .toArray()
-          ).to.eql([additionalPerson, ...data]));
+          expect(fluent(subject).prepend(additionalPerson).toArray()).toEqual([additionalPerson, ...data]));
       });
       describe('concat', () => {
-        it('one empty array', () =>
-          expect(
-            fluent(subject)
-              .concat([])
-              .toArray()
-          ).to.eql(data));
-        it('two empty arrays', () =>
-          expect(
-            fluent(subject)
-              .concat([], [])
-              .toArray()
-          ).to.eql(data));
+        it('one empty array', () => expect(fluent(subject).concat([]).toArray()).toEqual(data));
+        it('two empty arrays', () => expect(fluent(subject).concat([], []).toArray()).toEqual(data));
         it('one non-empty arrays', () =>
-          expect(
-            fluent(subject)
-              .concat([additionalPerson])
-              .toArray()
-          ).to.eql([...data, additionalPerson]));
+          expect(fluent(subject).concat([additionalPerson]).toArray()).toEqual([...data, additionalPerson]));
         it('two non-empty arrays', () =>
-          expect(
-            fluent(subject)
-              .concat([additionalPerson], data)
-              .toArray()
-          ).to.eql([...data, additionalPerson, ...data]));
+          expect(fluent(subject).concat([additionalPerson], data).toArray()).toEqual([
+            ...data,
+            additionalPerson,
+            ...data,
+          ]));
         it('one empty and one non-empty arrays', () =>
-          expect(
-            fluent(subject)
-              .concat([], [additionalPerson])
-              .toArray()
-          ).to.eql([...data, additionalPerson]));
+          expect(fluent(subject).concat([], [additionalPerson]).toArray()).toEqual([...data, additionalPerson]));
       });
       describe('repeat', () => {
-        it('negative number of times', () =>
-          expect(
-            fluent(subject)
-              .repeat(-5)
-              .toArray()
-          ).to.be.empty);
-        it('zero times', () =>
-          expect(
-            fluent(subject)
-              .repeat(0)
-              .toArray()
-          ).to.be.empty);
-        it('once', () =>
-          expect(
-            fluent(subject)
-              .repeat(1)
-              .toArray()
-          ).to.eql(data));
-        it('twice', () =>
-          expect(
-            fluent(subject)
-              .repeat(2)
-              .toArray()
-          ).to.eql([...data, ...data]));
-        it('three times', () =>
-          expect(
-            fluent(subject)
-              .repeat(3)
-              .toArray()
-          ).to.eql([...data, ...data, ...data]));
+        it('negative number of times', () => expect(fluent(subject).repeat(-5).toArray()).toHaveLength(0));
+        it('zero times', () => expect(fluent(subject).repeat(0).toArray()).toHaveLength(0));
+        it('once', () => expect(fluent(subject).repeat(1).toArray()).toEqual(data));
+        it('twice', () => expect(fluent(subject).repeat(2).toArray()).toEqual([...data, ...data]));
+        it('three times', () => expect(fluent(subject).repeat(3).toArray()).toEqual([...data, ...data, ...data]));
       });
       describe('flatten', () => {
-        it('empty array', () =>
-          expect(
-            fluent([])
-              .flatten()
-              .toArray()
-          ).to.be.empty);
-        it('already flat fails', () =>
-          expect(() =>
-            fluent(subject)
-              .flatten()
-              .toArray()
-          ).to.throw());
+        it('empty array', () => expect(fluent([]).flatten().toArray()).toHaveLength(0));
+        it('already flat fails', () => expect(() => fluent(subject).flatten().toArray()).toThrow());
         it('not flat', () =>
           expect(
             fluent([[1, 2], [3, 4, 5], [], [6]])
               .flatten()
               .toArray()
-          ).to.eql([1, 2, 3, 4, 5, 6]));
+          ).toEqual([1, 2, 3, 4, 5, 6]));
         it('with mapper', () =>
           expect(
             fluent(subject)
               .flatten(p => p.emails)
               .toArray()
-          ).to.eql(flatMap(picker(1, 2, 6, 7, 8, 9, 10, 11), p => p.emails)));
+          ).toEqual(flatMap(picker(1, 2, 6, 7, 8, 9, 10, 11), p => p.emails)));
       });
       describe('sort', () => {
-        it('empty', () =>
-          expect(
-            fluent([])
-              .sort()
-              .toArray()
-          ).to.be.empty);
-        it('flat numbers', () =>
-          expect(
-            fluent([6, 4, 5, 3, 2, 1])
-              .sort()
-              .toArray()
-          ).to.eql([1, 2, 3, 4, 5, 6]));
+        it('empty', () => expect(fluent([]).sort().toArray()).toHaveLength(0));
+        it('flat numbers', () => expect(fluent([6, 4, 5, 3, 2, 1]).sort().toArray()).toEqual([1, 2, 3, 4, 5, 6]));
         it('flat numbers with reversed comparison', () =>
           expect(
             fluent([6, 4, 5, 3, 2, 1])
               .sort((a, b) => b - a)
               .toArray()
-          ).to.eql([6, 5, 4, 3, 2, 1]));
+          ).toEqual([6, 5, 4, 3, 2, 1]));
       });
       describe('distinct', () => {
-        it('empty', () =>
-          expect(
-            fluent([])
-              .distinct()
-              .toArray()
-          ).to.be.empty);
-        it('not distinct numbers', () =>
-          expect(
-            fluent([1, 1, 1, 2, 2, 3])
-              .distinct()
-              .toArray()
-          ).to.eql([1, 2, 3]));
-        it('already distinct collection', () =>
-          expect(
-            fluent(subject)
-              .distinct()
-              .toArray()
-          ).to.eql(data));
+        it('empty', () => expect(fluent([]).distinct().toArray()).toHaveLength(0));
+        it('not distinct numbers', () => expect(fluent([1, 1, 1, 2, 2, 3]).distinct().toArray()).toEqual([1, 2, 3]));
+        it('already distinct collection', () => expect(fluent(subject).distinct().toArray()).toEqual(data));
         it('with mapper', () =>
           expect(
             fluent(subject)
               .distinct(p => p.gender)
               .toArray()
-          ).to.eql(picker(0, 3, 4, 5)));
+          ).toEqual(picker(0, 3, 4, 5)));
       });
       describe('group', () => {
         it('empty', () =>
@@ -435,33 +300,30 @@ describe('fluent iterable', () => {
             fluent([] as Person[])
               .group(p => p.gender)
               .toArray()
-          ).to.be.empty);
+          ).toHaveLength(0));
         it('non-empty', () => {
           const groups = fluent(subject)
             .group(p => p.gender)
             .toArray();
-          expect(groups.length).to.eql(4);
-          expect(groups.map(grp => grp.key)).to.have.members([undefined, Gender.Male, Gender.Female, Gender.NonBinary]);
+          expect(groups.length).toEqual(4);
+          expect(groups.map(grp => grp.key)).toEqual(
+            expect.arrayContaining([undefined, Gender.Male, Gender.Female, Gender.NonBinary])
+          );
           for (const grp of groups) {
-            expect(grp.values.toArray()).to.eql(data.filter(p => p.gender === grp.key));
+            expect(grp.values.toArray()).toEqual(data.filter(p => p.gender === grp.key));
           }
         });
       });
       describe('count', () => {
-        it('empty', () => expect(fluent([]).count()).to.equal(0));
-        it('one element', () => expect(fluent([0]).count()).to.equal(1));
-        it('multiple elements', () => expect(fluent(subject).count()).to.equal(data.length));
+        it('empty', () => expect(fluent([]).count()).toBe(0));
+        it('one element', () => expect(fluent([0]).count()).toBe(1));
+        it('multiple elements', () => expect(fluent(subject).count()).toBe(data.length));
       });
     });
 
     describe('asynchronous', () => {
-      context('basics work', () => {
-        it('can convert to fluentAsync', async () =>
-          expect(
-            await fluent(subject)
-              .toAsync()
-              .toArray()
-          ).to.eql(data));
+      describe('basics work', () => {
+        it('can convert to fluentAsync', async () => expect(await fluent(subject).toAsync().toArray()).toEqual(data));
       });
     });
   };
