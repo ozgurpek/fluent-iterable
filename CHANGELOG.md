@@ -1,4 +1,9 @@
 
+## 1.0.0
+* 5ba0fde 1.0.0
+* 2ca6be7 Bumping dependencies
+* a707819 fixing changelog script
+* 0091942 bumping version
 ## v0.1.6
 * 64a6793 0.1.6
 * b42c354 adding email address to contributors & updating licence
